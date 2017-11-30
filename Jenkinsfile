@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'tomcat_dev', defaultValue: 'localhost', description: 'Staging Server')
-        string(name: 'tomcat_prod', defaultValue: 'localhost', description: 'Production Server')
+        string(name: 'tomcat_dev', defaultValue: '<ip-to-dev-machine>', description: 'Staging Server')
+        string(name: 'tomcat_prod', defaultValue: '<ip-to-prod-machine>', description: 'Production Server')
     }
     
     triggers {
@@ -27,14 +27,14 @@ pipeline {
             parallel {
                 stage('Deploy to Staging') {
                     steps {
-                        sh "cp -f **/target/*.war jenkins@${params.tomcat_dev}:/usr/local/apache-tomcat-8.5.23/webapps"
+                        sh "cp -f **/target/*.war /usr/local/apache-tomcat-8.5.23/webapps"
                         //sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_dev}:/var/lib/tomcat7/webapps"
                     }
                 }
 
                 stage('Deploy to Production') {
                     steps {
-                        sh "cp -f **/target/*.war jenkins@${params.tomcat_prod}:/usr/local/apache-tomcat-8.5.23-2/webapps"
+                        sh "cp -f **/target/*.war /usr/local/apache-tomcat-8.5.23-2/webapps"
                         //sh "scp -i /home/jenkins/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_prod}:/var/lib/tomcat7/webapps"
                     }
                 }
