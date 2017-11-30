@@ -1,7 +1,18 @@
 pipeline {
     agent any
-    stages{
-        stage('Build'){
+
+    parameters {
+        string('tomcat_dev', defaultValue: 'localhost:8888', description: 'Staging Server')
+        string('tomcat_prod', defaultValue: 'localhost:8889', description: 'Production Server')
+    }
+    
+    triggers {
+        // Poll Git every minute
+        pollSCM('* * * * *')
+    }
+
+    stages {
+        stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
@@ -12,26 +23,18 @@ pipeline {
                 }
             }
         }
-        stage ('Deploy to Staging') {
-            steps {
-                build job: 'deploy-to-staging'
-            }
-        }
-        stage ('Deploy to Production') {
-            steps {
-                timeout(time:5, unit:'DAYS') {
-                    input message: 'Approve PRODUCTION Deployment?'
+        stage ('Deployments') {
+            parallel {
+                stage('Deploy to Staging') {
+                    steps {
+                        sh "cp -f **/target/*.war /usr/local/apache-tomcat-8.5.23/webapps"
+                    }
                 }
 
-                build job: 'deploy-to-prod'
-            }
-            post {
-                success {
-                    echo 'Code deployed to Production.'
-                }
-                
-                failure {
-                    echo 'Deployment failed.'
+                stage('Deploy to Production') {
+                    steps {
+                        sh "cp -f **/target/*.war /usr/local/apache-tomcat-8.5.23-2/webapps"
+                    }
                 }
             }
         }
